@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-from __future__ import annotations   # FIX: makes all type hints work on Python 3.9+
 """
 app.py — EE200: Audio Fingerprinting  (Performance-Optimised Build)
 ====================================================================
@@ -65,6 +64,7 @@ Run
 ---
   streamlit run app.py
 """
+from __future__ import annotations   # FIX: makes all type hints work on Python 3.9+
 
 import io
 import os
