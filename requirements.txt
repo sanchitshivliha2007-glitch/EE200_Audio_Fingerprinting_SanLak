@@ -1,7 +1,7 @@
-streamlit
-librosa
-numpy
-pandas
-matplotlib
-scipy
-soundfile
+streamlit>=1.28.0
+librosa>=0.10.0
+scipy>=1.11.0
+numpy>=1.24.0
+pandas>=2.0.0
+matplotlib>=3.7.0
+soundfile>=0.12.1
