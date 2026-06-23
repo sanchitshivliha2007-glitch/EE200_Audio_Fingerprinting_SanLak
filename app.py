@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from __future__ import annotations   # FIX: makes all type hints work on Python 3.9+
 """
 app.py — EE200: Audio Fingerprinting  (Performance-Optimised Build)
 ====================================================================
@@ -74,13 +75,13 @@ from collections import defaultdict
 
 import librosa
 import matplotlib
+matplotlib.use("Agg")   # FIX: must be called BEFORE importing matplotlib.pyplot
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import streamlit as st
 from scipy.ndimage import maximum_filter
 
-matplotlib.use("Agg")   # non-interactive backend required inside Streamlit
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
 
