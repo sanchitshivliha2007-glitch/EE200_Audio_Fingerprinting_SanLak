@@ -934,13 +934,13 @@ with tab_identify:
                                         margin: 20px 0;
                                         text-align: center;
                                     ">
-                                        <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#e53935;margin-bottom:8px;">
+                                        <div style="font-size:1.8rem;font-weight:900;letter-spacing:0.04em;text-transform:uppercase;color:#e53935;margin-bottom:10px;">
                                             ✕ &nbsp;Song Not In Database
                                         </div>
-                                        <div style="font-size:1.6rem;font-weight:900;color:#FFFFFF;letter-spacing:-0.01em;">
+                                        <div style="font-size:1rem;font-weight:600;color:#FFFFFF;letter-spacing:-0.01em;">
                                             {closest_name}
                                         </div>
-                                        <div style="font-size:0.82rem;color:#B3B3B3;margin-top:6px;">
+                                        <div style="font-size:0.78rem;color:#B3B3B3;margin-top:6px;">
                                             Closest candidate &nbsp;·&nbsp; {closest_score} aligned hashes &nbsp;·&nbsp; minimum required: {MIN_ALIGNMENT_SCORE}
                                         </div>
                                     </div>
@@ -958,13 +958,13 @@ with tab_identify:
                                         margin: 20px 0;
                                         text-align: center;
                                     ">
-                                        <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#e53935;margin-bottom:8px;">
+                                        <div style="font-size:1.8rem;font-weight:900;letter-spacing:0.04em;text-transform:uppercase;color:#e53935;margin-bottom:10px;">
                                             ✕ &nbsp;Song Not In Database
                                         </div>
-                                        <div style="font-size:1.6rem;font-weight:900;color:#FFFFFF;letter-spacing:-0.01em;">
+                                        <div style="font-size:1rem;font-weight:600;color:#FFFFFF;letter-spacing:-0.01em;">
                                             No Match Found
                                         </div>
-                                        <div style="font-size:0.82rem;color:#B3B3B3;margin-top:6px;">
+                                        <div style="font-size:0.78rem;color:#B3B3B3;margin-top:6px;">
                                             No hashes matched any indexed track
                                         </div>
                                     </div>
