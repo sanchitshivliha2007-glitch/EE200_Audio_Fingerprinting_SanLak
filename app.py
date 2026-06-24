@@ -922,17 +922,54 @@ with tab_identify:
                         if winner is None:
                             best_candidate = max(scores, key=scores.get) if scores else None
                             if best_candidate and scores[best_candidate] > 0:
-                                st.warning(
-                                    f"🔍  Song not found in database.\n\n"
-                                    f"Closest candidate: **{best_candidate.replace('_', ' ')}** "
-                                    f"with **{scores[best_candidate]}** aligned hashes "
-                                    f"(minimum required: {MIN_ALIGNMENT_SCORE}). "
-                                    f"This song has likely not been indexed."
+                                closest_name = best_candidate.replace("_", " ")
+                                closest_score = scores[best_candidate]
+                                st.markdown(
+                                    f"""
+                                    <div style="
+                                        background: linear-gradient(135deg, #3a1a1a 0%, #191414 100%);
+                                        border: 2px solid #e53935;
+                                        border-radius: 14px;
+                                        padding: 24px 28px;
+                                        margin: 20px 0;
+                                        text-align: center;
+                                    ">
+                                        <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#e53935;margin-bottom:8px;">
+                                            ✕ &nbsp;Song Not In Database
+                                        </div>
+                                        <div style="font-size:1.6rem;font-weight:900;color:#FFFFFF;letter-spacing:-0.01em;">
+                                            {closest_name}
+                                        </div>
+                                        <div style="font-size:0.82rem;color:#B3B3B3;margin-top:6px;">
+                                            Closest candidate &nbsp;·&nbsp; {closest_score} aligned hashes &nbsp;·&nbsp; minimum required: {MIN_ALIGNMENT_SCORE}
+                                        </div>
+                                    </div>
+                                    """,
+                                    unsafe_allow_html=True,
                                 )
                             else:
-                                st.error(
-                                    "❌  No matching hashes found in the database. "
-                                    "This song has not been indexed."
+                                st.markdown(
+                                    """
+                                    <div style="
+                                        background: linear-gradient(135deg, #3a1a1a 0%, #191414 100%);
+                                        border: 2px solid #e53935;
+                                        border-radius: 14px;
+                                        padding: 24px 28px;
+                                        margin: 20px 0;
+                                        text-align: center;
+                                    ">
+                                        <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#e53935;margin-bottom:8px;">
+                                            ✕ &nbsp;Song Not In Database
+                                        </div>
+                                        <div style="font-size:1.6rem;font-weight:900;color:#FFFFFF;letter-spacing:-0.01em;">
+                                            No Match Found
+                                        </div>
+                                        <div style="font-size:0.82rem;color:#B3B3B3;margin-top:6px;">
+                                            No hashes matched any indexed track
+                                        </div>
+                                    </div>
+                                    """,
+                                    unsafe_allow_html=True,
                                 )
                         else:
                             top_score = scores[winner]
