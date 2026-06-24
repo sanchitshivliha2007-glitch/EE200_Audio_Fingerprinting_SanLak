@@ -95,7 +95,8 @@ MIN_DB_THRESHOLD = -40.0     # peaks below this dB value are discarded
 TZ_OFFSET_MIN = 5         # target-zone minimum forward frame offset
 TZ_OFFSET_MAX = 50        # target-zone maximum forward frame offset
 MAX_SCATTER_POINTS = 2_000     # [OPT-8] scatter plot sub-sample cap
-MIN_ALIGNMENT_SCORE = 10  # minimum aligned hashes to accept a match (anti-false-positive)
+MIN_ALIGNMENT_SCORE = 50  # minimum aligned hashes required to accept a match
+MIN_SCORE_GAP = 5         # winner must outscore runner-up by at least this much
 DB_PATH = "song_database.pkl"
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -550,10 +551,13 @@ def match_against_database(
 
     if scores:
         winner = max(scores, key=scores.get)
-        # Reject the winner if its alignment score is below the confidence
-        # threshold — this prevents false positives when an unindexed song
-        # produces a handful of random hash collisions with indexed songs.
-        if scores[winner] < MIN_ALIGNMENT_SCORE:
+        top_score = scores[winner]
+        sorted_scores = sorted(scores.values(), reverse=True)
+        second_score = sorted_scores[1] if len(sorted_scores) > 1 else 0
+        gap = top_score - second_score
+        # Reject weak or ambiguous matches: score must clear the minimum
+        # threshold AND be sufficiently ahead of the runner-up.
+        if top_score < MIN_ALIGNMENT_SCORE or gap < MIN_SCORE_GAP:
             winner = None
     else:
         winner = None
@@ -920,10 +924,10 @@ with tab_identify:
                             if best_candidate and scores[best_candidate] > 0:
                                 st.warning(
                                     f"🔍  Song not found in database.\n\n"
-                                    f"Closest candidate was **{best_candidate.replace('_', ' ')}** "
-                                    f"with only **{scores[best_candidate]}** aligned hashes "
+                                    f"Closest candidate: **{best_candidate.replace('_', ' ')}** "
+                                    f"with **{scores[best_candidate]}** aligned hashes "
                                     f"(minimum required: {MIN_ALIGNMENT_SCORE}). "
-                                    f"This is likely a different song or a recording not in the index."
+                                    f"This song has likely not been indexed."
                                 )
                             else:
                                 st.error(
@@ -1055,10 +1059,9 @@ with tab_batch:
                         # [OPT-5] fingerprint_audio() is cached — repeated clips
                         # are essentially free on the second call
                         _, _, _, q_hashes = fingerprint_audio(audio_bytes)
-                        winner, scores, _ = match_against_database(
+                        winner, _, _ = match_against_database(
                             q_hashes, database)
-                        # winner is already None when below MIN_ALIGNMENT_SCORE
-                        prediction = winner if winner is not None else "Not in database"
+                        prediction = winner if winner is not None else "None"
 
                     except Exception as exc:
                         st.warning(f"⚠️  Skipped `{raw_filename}`: {exc}")
@@ -1089,7 +1092,7 @@ with tab_batch:
                              hide_index=True)
 
                 # ── Summary metrics ───────────────────────────────────────────
-                n_matched = (df_results["prediction"] != "Not in database").sum()
+                n_matched = (df_results["prediction"] != "None").sum()
                 n_unmatched = n_files - n_matched
                 m1, m2, m3 = st.columns(3)
                 m1.metric("Total Clips",  n_files)
