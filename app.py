@@ -64,7 +64,6 @@ Run
 ---
   streamlit run app.py
 """
-from __future__ import annotations   # FIX: makes all type hints work on Python 3.9+
 
 import io
 import os
@@ -75,13 +74,13 @@ from collections import defaultdict
 
 import librosa
 import matplotlib
-matplotlib.use("Agg")   # FIX: must be called BEFORE importing matplotlib.pyplot
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import streamlit as st
 from scipy.ndimage import maximum_filter
 
+matplotlib.use("Agg")   # non-interactive backend required inside Streamlit
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
 
@@ -96,6 +95,7 @@ MIN_DB_THRESHOLD = -40.0     # peaks below this dB value are discarded
 TZ_OFFSET_MIN = 5         # target-zone minimum forward frame offset
 TZ_OFFSET_MAX = 50        # target-zone maximum forward frame offset
 MAX_SCATTER_POINTS = 2_000     # [OPT-8] scatter plot sub-sample cap
+MIN_ALIGNMENT_SCORE = 10  # minimum aligned hashes to accept a match (anti-false-positive)
 DB_PATH = "song_database.pkl"
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -548,7 +548,15 @@ def match_against_database(
                                  range=(min_o, max_o + 1))
         scores[song] = int(counts.max())
 
-    winner = max(scores, key=scores.get) if scores else None
+    if scores:
+        winner = max(scores, key=scores.get)
+        # Reject the winner if its alignment score is below the confidence
+        # threshold — this prevents false positives when an unindexed song
+        # produces a handful of random hash collisions with indexed songs.
+        if scores[winner] < MIN_ALIGNMENT_SCORE:
+            winner = None
+    else:
+        winner = None
     return winner, scores, offsets_map
 
 
@@ -908,8 +916,20 @@ with tab_identify:
 
                         # ── Winner announcement ───────────────────────────────
                         if winner is None:
-                            st.error(
-                                "❌  No matching song found in the database.")
+                            best_candidate = max(scores, key=scores.get) if scores else None
+                            if best_candidate and scores[best_candidate] > 0:
+                                st.warning(
+                                    f"🔍  Song not found in database.\n\n"
+                                    f"Closest candidate was **{best_candidate.replace('_', ' ')}** "
+                                    f"with only **{scores[best_candidate]}** aligned hashes "
+                                    f"(minimum required: {MIN_ALIGNMENT_SCORE}). "
+                                    f"This is likely a different song or a recording not in the index."
+                                )
+                            else:
+                                st.error(
+                                    "❌  No matching hashes found in the database. "
+                                    "This song has not been indexed."
+                                )
                         else:
                             top_score = scores[winner]
                             display_win = winner.replace("_", " ")
@@ -1035,9 +1055,10 @@ with tab_batch:
                         # [OPT-5] fingerprint_audio() is cached — repeated clips
                         # are essentially free on the second call
                         _, _, _, q_hashes = fingerprint_audio(audio_bytes)
-                        winner, _, _ = match_against_database(
+                        winner, scores, _ = match_against_database(
                             q_hashes, database)
-                        prediction = winner if winner is not None else "None"
+                        # winner is already None when below MIN_ALIGNMENT_SCORE
+                        prediction = winner if winner is not None else "Not in database"
 
                     except Exception as exc:
                         st.warning(f"⚠️  Skipped `{raw_filename}`: {exc}")
@@ -1068,7 +1089,7 @@ with tab_batch:
                              hide_index=True)
 
                 # ── Summary metrics ───────────────────────────────────────────
-                n_matched = (df_results["prediction"] != "None").sum()
+                n_matched = (df_results["prediction"] != "Not in database").sum()
                 n_unmatched = n_files - n_matched
                 m1, m2, m3 = st.columns(3)
                 m1.metric("Total Clips",  n_files)
